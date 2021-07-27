@@ -1,5 +1,5 @@
 import * as config from 'config';
-import { isDireectoryExists, mkdir, writeFile, isFileExists } from './helpers';
+import { isDireectoryExists, mkdir, writeFile, isFileExists, clickButton } from './helpers';
 import { ROOT_PATH, HTTP_REQUEST_TIMEOUT, PageTitleAndLink, SAVE_LESSON_AS, AvailableCourses, BATCH_SIZE } from './globals';
 import { getPage, getSpecialBrowser } from './browser';
 import { Browser, Page } from 'puppeteer';
@@ -24,7 +24,7 @@ export async function fetchAllCoursesAvailableToDownload(url: string, cursor: st
   const response = await page.evaluate(() => {
     return document.querySelector("body").innerText;
   });
-
+  
   const availableCourses: AvailableCourses = JSON.parse(response);
 
   for (const availableCourse of availableCourses.summaries) {
@@ -90,7 +90,7 @@ async function fetchLessonUrls(courseUrl: string): Promise<PageTitleAndLink[]> {
   console.log(`Looking for lessons\'s urls`);
 
   const pageLinks = await page.evaluate(() => {
-    const links: HTMLAnchorElement[] = Array.from(document.querySelectorAll('.tab-content a'));
+    const links: HTMLAnchorElement[] = Array.from(document.querySelectorAll('menu a'));
     return links.map((link) => {
       return {
         title: link.innerText,
@@ -123,6 +123,8 @@ async function downloadPage(title: string, link: string): Promise<void> {
     page = await browser.newPage();
 
     await page.goto(link, { timeout: HTTP_REQUEST_TIMEOUT, waitUntil: 'networkidle0' });
+
+    await clickButton(page,"mt-4","Got it!");
 
     await page.addStyleTag({ content: 'div[class^="styles__PrevNextButtonWidgetStyled"], div[class^="styles__Footer"], nav { display: none !important; }' });
 
@@ -416,11 +418,15 @@ async function pageEvaluation({ SAVE_AS, SAVE_LESSON_AS }) {
   if (SAVE_AS === SAVE_LESSON_AS.PDF) {
     node?.childNodes[0]?.childNodes[0]?.childNodes[0]?.remove();
   } else {
-    node.style.cssText = 'margin-top: -70px';
-
-    const content = node?.childNodes[0]?.childNodes[0]?.childNodes[1]?.childNodes[0]?.childNodes[0];
-    node?.childNodes[0]?.childNodes[0]?.childNodes[1]?.appendChild(content);
-    node?.childNodes[0]?.childNodes[0]?.childNodes[0]?.remove();
+    try {
+      node.style.cssText = 'margin-top: -70px';
+      const content = node?.childNodes[0]?.childNodes[0]?.childNodes[1]?.childNodes[0]?.childNodes[0];
+      console.log(content);
+      node?.childNodes[0]?.childNodes[0]?.childNodes[1]?.appendChild(content);
+      node?.childNodes[0]?.childNodes[0]?.childNodes[0]?.remove();
+    } catch(error) {
+      console.log(error);
+    }
   }
 
   // Fetch available language of code snippets
@@ -523,7 +529,8 @@ async function buttonClicks() {
     'Rubric',
     'What the interviewer is listening for ',
     'Self-assessment',
-    'Self-assesment'
+    'Self-assesment',
+    'Got it!'
   ];
 
   buttonsToClick.forEach((buttonText) => {

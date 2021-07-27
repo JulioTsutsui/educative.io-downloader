@@ -3,6 +3,7 @@ import { isLoggedIn, login } from './login';
 import { fetchAllCoursesAvailableToDownload, downloadCourse } from './download';
 import { ALL_COURSES_API, COURSE_URL_PREFIX } from './globals';
 import { getBrowser, closeBrowser } from './browser';
+/* import * as fs from "fs"; */
 
 const COURSE_URL: string = config.get('courseUrl');
 const LOGIN_CHECK: boolean = config.get('loginCheck');

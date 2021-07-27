@@ -1,7 +1,8 @@
 import * as config from 'config';
+import * as readline from 'readline';
 import { HTTP_REQUEST_TIMEOUT, EDUCATIVE_BASE_URL } from './globals';
 import { getPage, getBrowser } from './browser';
-import { Page } from 'puppeteer';
+import { clickButton } from './helpers';
 
 const EMAIL: string = config.get('email');
 const PASSWORD: string = config.get('password');
@@ -56,30 +57,37 @@ export async function login(): Promise<void> {
   // await page.setUserAgent(USER_AGENT);
   await page.goto(EDUCATIVE_BASE_URL, { timeout: HTTP_REQUEST_TIMEOUT, waitUntil: 'networkidle2' });
 
-  const isLoginButtonClicked = await clickButton(page, 'MuiButton-label', 'Log in');
-
+  const isLoginButtonClicked = await clickButton(page, 'm-0', 'Log in');
+  
   if (!isLoginButtonClicked) {
     throw new Error('Could not find login button (open login form)');
   }
 
   // Wait for dom to load
-  await page.waitFor(2000);
+  await page.waitFor(10000);
+  await page.type('[name=email]', EMAIL, { delay: 2000 });
+  await page.type('[name=password]', PASSWORD, { delay: 2000 });
 
-  await page.type('[name=email]', EMAIL, { delay: 200 });
-  await page.type('[name=password]', PASSWORD, { delay: 200 });
-
-  const clickLoginBtn = await clickButton(page, 'MuiButton-label', 'Login');
+  const clickLoginBtn = await clickButton(page, 'mt-6', 'Log In');
 
   if (!clickLoginBtn) {
     throw new Error('Could not find login button (login form submit)');
   }
 
-  const element = await page.waitForSelector(".b-status-control span", { timeout: 10000 });
+  const element = await page.waitForSelector(".b-status-control span", { timeout: 20000 });
   let label = await page.evaluate((el: HTMLSpanElement) => el.innerText, element);
-
+  console.log(label);
   if (label === 'Logging in...') {
     try {
-      await page.waitForNavigation({ waitUntil: 'networkidle0' });
+      
+      if(await page.waitForSelector("[name=two_factor_code]", { timeout: 20000})){
+        let CODE = await askQuestion("Enter the two-factor code sent to your e-mail: ");
+        
+        await page.type('[name=two_factor_code]', CODE.trim(), { delay: 200 });
+        await clickButton(page, 'mt-6', 'Log In')
+      };
+      
+      await page.waitForNavigation({waitUntil: "networkidle0"});
       await page.close();
       return;
     } catch (error) {
@@ -96,20 +104,15 @@ export async function login(): Promise<void> {
   throw new Error(label);
 }
 
-async function clickButton(page: Page, className: string, buttonLabel: string): Promise<boolean> {
-  const isClicked = await page.evaluate(({ className, buttonLabel }) => {
-    const elements = document.getElementsByClassName(className);
+/* Function from: https://stackoverflow.com/questions/18193953/waiting-for-user-to-enter-input-in-node-js  */
+function askQuestion(query): Promise<string>{
+  const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+  });
 
-    // tslint:disable-next-line: prefer-for-of
-    for (let i = 0; i < elements.length; i++) {
-      if (elements[i].innerHTML === buttonLabel) {
-        (elements[i] as HTMLElement).click();
-        return true;
-      }
-    }
-
-    return false;
-  }, { className, buttonLabel });
-
-  return isClicked;
+  return new Promise(resolve => rl.question(query, ans => {
+      rl.close();
+      resolve(ans);
+  }))
 }
