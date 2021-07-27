@@ -1,7 +1,3 @@
-# !! Discontinued !!
-
-<br>
-
 ## ✉️ Description
 This tool is to download course from for later usage. It uses your login credentials and download the course.
 
@@ -25,7 +21,7 @@ Config file (___config/default.json___) has the following properties.
 - password: Your subscription password.
 - loginCheck: By default, before downloading a course we check if you are already logged in. If you are sure that you are already logged in then you can set this value to ___false___ to skip login check. Recommended value: `true`.
 - multiLanguage: A lesson can contains code snippets in multiple programming languages. Set this to `true` to download snippets in all available language. Default is `false`.
-- saveAs: Available options: ___`pdf` and `html`___. Default is ___`html`___.
+- saveAs: Available options: ___`pdf` and `html`___. Default is ___`html`___. (pdf option only works with headless browser)
 - headless: Browser mode. Default is `false`.
 
 > IMPORTANT: If you save as html it is actually gonna save as mhtml.
@@ -46,3 +42,6 @@ Config file (___config/default.json___) has the following properties.
 
 **SOMETHING IS WRONG?**
 - Remove `data` directory. Chrome driver stores session/cookies etc in that directory.
+
+**Enter the two-factor code sent to your e-mail**
+- If you get the message `Enter the two-factor code sent to your e-mail:`, insert the two-factor code that educative.io sent to your account e-mail.
