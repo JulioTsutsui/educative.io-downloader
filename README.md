@@ -43,5 +43,5 @@ Config file (___config/default.json___) has the following properties.
 **SOMETHING IS WRONG?**
 - Remove `data` directory. Chrome driver stores session/cookies etc in that directory.
 
-**Enter the two-factor code sent to your e-mail**
+**TWO-FACTOR CODE**
 - If you get the message `Enter the two-factor code sent to your e-mail:`, insert the two-factor code that educative.io sent to your account e-mail.

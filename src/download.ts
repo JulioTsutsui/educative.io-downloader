@@ -1,3 +1,6 @@
+const fs = require("fs");
+const path = require("path");
+const PDFDocument = require('pdf-lib').PDFDocument
 import * as config from 'config';
 import { isDireectoryExists, mkdir, writeFile, isFileExists, clickButton } from './helpers';
 import { ROOT_PATH, HTTP_REQUEST_TIMEOUT, PageTitleAndLink, SAVE_LESSON_AS, AvailableCourses, BATCH_SIZE } from './globals';
@@ -6,6 +9,7 @@ import { Browser, Page } from 'puppeteer';
 
 let SAVE_DESTINATION = '';
 const SAVE_AS: string = config.get('saveAs');
+const MERGE_PDF: boolean = config.get("mergePdf");
 const MULTI_LANGUAGE: boolean = config.get('multiLanguage');
 const COURSE_URL_SLUG_LIST = [];
 
@@ -58,6 +62,34 @@ export async function downloadCourse(courseUrl: string) {
     } catch (error) {
       console.error(error.message);
     }
+  }
+  
+  if(MERGE_PDF == true){
+    console.log("Merging PDFs");
+    await fs.readdir(SAVE_DESTINATION, async (err, data)=>{
+      if(err) console.log(err);
+      
+      const files = await data.map(x => SAVE_DESTINATION + "\\" + x).sort(function (a,b){
+          return a.localeCompare(b, undefined, {numeric: true, sensitivity: "base"});
+      }).map(x=> fs.readFileSync(x));
+      
+      /* Adapted from: https://stackoverflow.com/questions/36766234/nodejs-merge-two-pdf-files-into-one-using-the-buffer-obtained-by-reading-them */
+      const mergedPdf = await PDFDocument.create(); 
+      for (const pdfBytes of files) { 
+          const pdf = await PDFDocument.load(pdfBytes); 
+          const copiedPages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
+          copiedPages.forEach((page) => {
+              mergedPdf.addPage(page); 
+          }); 
+      } 
+
+      const buf = await mergedPdf.save();        // Uint8Array
+
+      let filename = `\\${path.basename(SAVE_DESTINATION)}.pdf`;
+      fs.writeFile(SAVE_DESTINATION + filename,buf,err=>{
+          if(err) console.log(err);
+      });
+    });
   }
 }
 
