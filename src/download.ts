@@ -69,7 +69,7 @@ export async function downloadCourse(courseUrl: string) {
     await fs.readdir(SAVE_DESTINATION, async (err, data)=>{
       if(err) console.log(err);
       
-      const files = await data.map(x => SAVE_DESTINATION + "\\" + x).sort(function (a,b){
+      const files = await data.filter(w=> w.endsWith(".pdf")).map(x => SAVE_DESTINATION + "\\" + x).sort(function (a,b){
           return a.localeCompare(b, undefined, {numeric: true, sensitivity: "base"});
       }).map(x=> fs.readFileSync(x));
       
@@ -86,7 +86,12 @@ export async function downloadCourse(courseUrl: string) {
       const buf = await mergedPdf.save();        // Uint8Array
 
       let filename = `\\${path.basename(SAVE_DESTINATION)}.pdf`;
-      fs.writeFile(SAVE_DESTINATION + filename,buf,err=>{
+
+      if (!(await isDireectoryExists(`${SAVE_DESTINATION}/merged`))) {
+        await mkdir(`${SAVE_DESTINATION}/merged`);
+      }
+      
+      await fs.writeFile(SAVE_DESTINATION + "/merged/" + filename, buf, err =>{
           if(err) console.log(err);
       });
     });

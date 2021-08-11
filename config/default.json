@@ -6,5 +6,6 @@
     "multiLanguage": false,
     "headless": true,
     "courseUrl": "https://www.educative.io/courses/grokking-the-behavioral-interview",
-    "downloadAllCourses": false
+    "downloadAllCourses": false,
+    "mergePdf": false
 }
